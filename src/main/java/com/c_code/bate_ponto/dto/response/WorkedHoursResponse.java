@@ -1,8 +1,10 @@
-package com.c_code.bate_ponto.dto;
+package com.c_code.bate_ponto.dto.response;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class WorkedHoursResponse {
 
     private String date;

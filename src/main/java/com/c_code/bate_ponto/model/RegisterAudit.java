@@ -1,13 +1,17 @@
 package com.c_code.bate_ponto.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "register_audit")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class RegisterAudit {
 
     @Id
@@ -19,16 +23,16 @@ public class RegisterAudit {
     private Long userId;
 
     @Column(length = 1000)
-    private String oldData; // JSON ou texto formatado do registro original
+    private String oldData;
 
     @Column(length = 1000)
-    private String newData; // JSON ou texto formatado do registro editado
+    private String newData;
 
     @Column(length = 1000)
     private String observation;
 
     private LocalDateTime editedAt;
 
-    private Long editedByUserId; // opcional, quem fez a edição
+    private Long editedByUserId;
 
 }

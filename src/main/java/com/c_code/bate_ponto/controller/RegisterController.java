@@ -3,8 +3,12 @@ package com.c_code.bate_ponto.controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-import com.c_code.bate_ponto.dto.*;
-import com.c_code.bate_ponto.service.RegisterService;
+import com.c_code.bate_ponto.dto.request.RegisterEditRequest;
+import com.c_code.bate_ponto.dto.request.RegisterRequest;
+import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
+import com.c_code.bate_ponto.dto.response.RegisterResponse;
+import com.c_code.bate_ponto.dto.response.WorkedHoursResponse;
+import com.c_code.bate_ponto.service.register.RegisterService;
 
 @RestController
 @RequestMapping("/registers")

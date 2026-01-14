@@ -1,7 +1,12 @@
-package com.c_code.bate_ponto.dto;
+package com.c_code.bate_ponto.dto.request;
 
 import com.c_code.bate_ponto.model.UserType;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class UserRequest {
     public String name;
     public UserType type;

@@ -1,4 +1,4 @@
-package com.c_code.bate_ponto.dto;
+package com.c_code.bate_ponto.dto.response;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,9 +7,11 @@ import java.util.Locale;
 import com.c_code.bate_ponto.model.Register;
 import com.c_code.bate_ponto.model.RegisterType;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class RegisterResponse {
 
     private Long id;
@@ -50,9 +52,7 @@ public class RegisterResponse {
     public RegisterResponse(Register register) {
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
         DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEEE", new Locale("pt", "BR"));
 
         this.id = register.getId();

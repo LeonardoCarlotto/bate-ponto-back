@@ -1,12 +1,17 @@
 package com.c_code.bate_ponto.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Table(name = "register")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Register {
 
     @Id

@@ -1,4 +1,4 @@
-package com.c_code.bate_ponto.service;
+package com.c_code.bate_ponto.service.user;
 
 import com.c_code.bate_ponto.model.*;
 import com.c_code.bate_ponto.repository.*;
@@ -19,7 +19,6 @@ public class UserService {
         user.setName(name);
         user.setEmail(email);
         user.setType(type);
-
 
         return userRepository.save(user);
     }

@@ -1,14 +1,14 @@
-package com.c_code.bate_ponto.service;
+package com.c_code.bate_ponto.service.register;
 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import com.c_code.bate_ponto.dto.RegisterEditRequest;
-import com.c_code.bate_ponto.dto.RegisterRequest;
-import com.c_code.bate_ponto.dto.RegisterResponse;
-import com.c_code.bate_ponto.dto.WorkedHoursRequest;
-import com.c_code.bate_ponto.dto.WorkedHoursResponse;
+import com.c_code.bate_ponto.dto.request.RegisterEditRequest;
+import com.c_code.bate_ponto.dto.request.RegisterRequest;
+import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
+import com.c_code.bate_ponto.dto.response.RegisterResponse;
+import com.c_code.bate_ponto.dto.response.WorkedHoursResponse;
 import com.c_code.bate_ponto.model.*;
 import com.c_code.bate_ponto.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +36,7 @@ public class RegisterService {
     public RegisterResponse registerPoint(RegisterRequest request) {
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("user not found"));
 
         RegisterType nextType = calculateNextType(user.getId());
 
@@ -127,7 +127,7 @@ public class RegisterService {
     @SuppressWarnings("null")
     public RegisterResponse editRegister(RegisterEditRequest request, Long editorUserId) throws Exception {
         Register register = registerRepository.findById(request.getRegisterId())
-                .orElseThrow(() -> new RuntimeException("Registro não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Register not found"));
 
         String oldData = objectMapper.writeValueAsString(register);
 

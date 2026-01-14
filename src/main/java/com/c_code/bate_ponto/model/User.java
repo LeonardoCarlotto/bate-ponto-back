@@ -1,9 +1,15 @@
 package com.c_code.bate_ponto.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -11,39 +17,18 @@ public class User {
     private Long id;
 
     private String name;
-    private String email;
+
+    @Enumerated(EnumType.STRING)
     private UserType type;
 
-      public Long getId() {
-        return id;
-    }
+    @Column(unique = true)
+    private String email;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String password;
 
-    public UserType getType() {
-        return type;
-    }
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
-    public void setType(UserType type) {
-        this.type = type;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    private boolean active;
 
 }

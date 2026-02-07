@@ -11,4 +11,8 @@ public class RegisterEditRequest {
     private String observation;
     private String newRegistro;
 
+    public void setRegisterId(Long registerId) {
+        this.registerId = registerId;
+    }
+
 }

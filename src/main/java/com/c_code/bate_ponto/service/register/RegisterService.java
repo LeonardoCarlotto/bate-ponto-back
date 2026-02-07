@@ -5,12 +5,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import com.c_code.bate_ponto.dto.request.RegisterEditRequest;
-import com.c_code.bate_ponto.dto.request.RegisterRequest;
 import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
 import com.c_code.bate_ponto.dto.response.RegisterResponse;
 import com.c_code.bate_ponto.dto.response.WorkedHoursResponse;
 import com.c_code.bate_ponto.model.*;
 import com.c_code.bate_ponto.repository.*;
+import com.c_code.bate_ponto.service.user.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.*;
@@ -33,9 +33,9 @@ public class RegisterService {
     }
 
     @SuppressWarnings("null")
-    public RegisterResponse registerPoint(RegisterRequest request) {
+    public RegisterResponse registerPoint(UserDetailsImpl userDetails) {
 
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new RuntimeException("user not found"));
 
         RegisterType nextType = calculateNextType(user.getId());
@@ -87,7 +87,7 @@ public class RegisterService {
                 .toList();
     }
 
-    public WorkedHoursResponse calculateWorkedHours(WorkedHoursRequest request) {
+    public WorkedHoursResponse calculateWorkedHours(WorkedHoursRequest request, Long userId) {
 
         LocalDate date = LocalDate.parse(request.getDate());
 
@@ -95,8 +95,8 @@ public class RegisterService {
         LocalDateTime end = date.atTime(LocalTime.MAX);
 
         List<Register> registers = registerRepository.findByUserIdAndDataTimeBetweenOrderByDataTimeAsc(
-                request.getUserId(),
-                start,
+                userId,
+                        start,
                 end);
 
         Duration total = Duration.ZERO;

@@ -25,16 +25,20 @@ public class UserController {
 
     @PostMapping
     public User register(@RequestBody UserRequest request) {
+        System.out.println(request);
         return user.register(
                 request.name,
                 request.email,
-                request.type);
+                request.type,
+                request.password,
+                request.role);
     }
 
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal UserDetailsImpl user) {
         return new UserResponse(
                 user.getUser().getName(),
-                user.getUser().getEmail());
+                user.getUser().getEmail(),
+                user.getUser().getType().name());
     }
 }

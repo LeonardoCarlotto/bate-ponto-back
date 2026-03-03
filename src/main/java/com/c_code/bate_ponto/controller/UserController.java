@@ -16,6 +16,7 @@ import com.c_code.bate_ponto.model.User;
 import com.c_code.bate_ponto.service.user.UserDetailsImpl;
 import com.c_code.bate_ponto.service.user.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/user")
@@ -29,16 +30,6 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
-    @PostMapping
-    public User register(@RequestBody UserRequest request) {
-        return userService.register(
-                request.name,
-                request.email,
-                request.type,
-                request.password,
-                request.role);
-    }
-
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal UserDetailsImpl user) {
         return new UserResponse(
@@ -50,6 +41,7 @@ public class UserController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> all(@AuthenticationPrincipal UserDetailsImpl user) {
         return userService.getAllUsers()
             .stream()
@@ -75,6 +67,10 @@ public class UserController {
                 request.getNewPassword()
             );
         } else {
+            // Verificar se o usuário é ADMIN antes de alterar senha de outro usuário
+            if (!userDetailsImpl.getUser().getRole().name().equals("ADMIN")) {
+                throw new RuntimeException("Apenas administradores podem alterar senha de outros usuários");
+            }
             userService.changePassword(request.getTargetUserId(), request.getNewPassword());
         }
     }

@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @AllArgsConstructor
@@ -72,11 +73,13 @@ public class RegisterController {
     }
 
     @GetMapping("/edited/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<RegisterResponse> findAllRegisterEdited() {
         return registerService.findAllRegisterEdited();
     }
 
     @PostMapping("/manual")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RegisterResponse> createManual(
             @RequestBody RegisterManualRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {

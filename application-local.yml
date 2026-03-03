@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bate_ponto
+    username: bateponto
+    password: bateponto
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.c_code: DEBUG
+    org.springframework.security: DEBUG

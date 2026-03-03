@@ -2,6 +2,7 @@ package com.c_code.bate_ponto.service.jwt;
 
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,9 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    private static final String SECRET = "chave-super-secreta-mudar-em-prod";
+    @Value("${JWT_SECRET:chave-super-secreta-mudar-em-prod}")
+    private String secret;
+    
     private static final long EXPIRATION = 1000 * 60 * 60 * 8; // 8 horas
 
     public String generateToken(User user) {
@@ -25,13 +28,13 @@ public class JwtService {
                 .claim("role", user.getType().name())
                 .setIssuedAt(new Date()) // agora, data atual
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()), SignatureAlgorithm.HS256)
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     private Claims extractClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET.getBytes())
+                .setSigningKey(secret.getBytes())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

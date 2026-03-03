@@ -13,9 +13,4 @@ public class WorkedHoursResponse {
         this.totalWorked = totalWorked;
     }
 
-    @Override
-    toString(){
-        return "Total horas trabalhadas: " + totalWorked;
-    }
-
 }

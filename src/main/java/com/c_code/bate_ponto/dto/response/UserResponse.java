@@ -8,7 +8,9 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 public class UserResponse {
+    Long id;
     String name;
     String email;
     String type;
+    String urlPhoto;
 }

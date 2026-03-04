@@ -1,5 +1,7 @@
 package com.c_code.bate_ponto.controller;
 
+import com.c_code.bate_ponto.model.Role;
+import com.c_code.bate_ponto.model.UserType;
 import com.c_code.bate_ponto.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +39,8 @@ public class UserController {
                 user.getUser().getName(),
                 user.getUser().getEmail(),
                 user.getUser().getType().name(),
-                null);
+                null,
+                user.getUser().isActive());
     }
 
     @GetMapping("/all")
@@ -50,9 +53,30 @@ public class UserController {
                 u.getName(),
                 u.getEmail(),
                 u.getType().name(),
-                null
-            ))
+                null,
+                u.isActive()))
             .toList();
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse createUser(@RequestBody UserRequest request) {
+        User user = userService.register(
+            request.getName(),
+            request.getEmail(),
+            UserType.valueOf(request.getType().name()),
+            request.getPassword(),
+            Role.valueOf(request.getRole().name())
+        );
+        
+        return new UserResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getType().name(),
+            null,
+            user.isActive()
+        );
     }
 
     @PostMapping("/change-password")

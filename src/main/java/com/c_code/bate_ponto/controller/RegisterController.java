@@ -11,6 +11,8 @@ import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
 import com.c_code.bate_ponto.dto.response.RegisterResponse;
 import com.c_code.bate_ponto.dto.response.WorkedHoursResponse;
 import com.c_code.bate_ponto.model.Register;
+import com.c_code.bate_ponto.model.User;
+import com.c_code.bate_ponto.repository.UserRepository;
 import com.c_code.bate_ponto.service.register.RegisterService;
 import com.c_code.bate_ponto.service.report.PdfService;
 import com.c_code.bate_ponto.service.user.UserDetailsImpl;
@@ -29,6 +31,7 @@ public class RegisterController {
 
     private final RegisterService registerService;
     private final PdfService pdfService;
+    private final UserRepository userRepository;
 
     @PostMapping
     public RegisterResponse register(@AuthenticationPrincipal UserDetailsImpl user) {
@@ -38,6 +41,12 @@ public class RegisterController {
     @GetMapping("/user")
     public List<RegisterResponse> findByUser(@AuthenticationPrincipal UserDetailsImpl user) {
         return registerService.findByUser(user.getId());
+    }
+
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<RegisterResponse> findByUserId(@PathVariable Long userId) {
+        return registerService.findByUser(userId);
     }
 
     @GetMapping("/user/pdf")
@@ -55,6 +64,30 @@ public class RegisterController {
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=relatorio_ponto_" + mes + "_" + ano + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf.toByteArray());
+    }
+
+    @GetMapping("/user/{userId}/pdf")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> reportPdfByUserId(
+            @PathVariable Long userId,
+            @RequestParam int mes,
+            @RequestParam int ano) throws Exception {
+
+        // Buscar dados do colaborador
+        User collaborator = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Colaborador não encontrado"));
+
+        List<RegisterResponse> registros = registerService.findByUserAndPeriodo(userId, mes, ano);
+
+        String nameUser = collaborator.getName();
+
+        ByteArrayOutputStream pdf = pdfService.gerarRelatorioPonto(registros, nameUser,
+                registerService.calculateWorkedHoursForMonth(mes, ano, userId));
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=relatorio_ponto_" + collaborator.getName().replace(" ", "_") + "_" + mes + "_" + ano + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf.toByteArray());
     }
@@ -79,7 +112,6 @@ public class RegisterController {
     }
 
     @PostMapping("/manual")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RegisterResponse> createManual(
             @RequestBody RegisterManualRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {

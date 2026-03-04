@@ -178,10 +178,19 @@ public class RegisterService {
                 .orElseThrow(() -> new RuntimeException("Register not found"));
 
         String oldData = objectMapper.writeValueAsString(register);
-        LocalTime localTime = LocalTime.parse(request.getNewRegistro());
-        LocalDate dataOriginal = register.getDataTime().toLocalDate();
-        LocalDateTime dataHora = LocalDateTime.of(dataOriginal, localTime);
-        register.setDataTime(dataHora);
+        
+        // Editar horário se fornecido
+        if (request.getNewRegistro() != null) {
+            LocalTime localTime = LocalTime.parse(request.getNewRegistro());
+            LocalDate dataOriginal = register.getDataTime().toLocalDate();
+            LocalDateTime dataHora = LocalDateTime.of(dataOriginal, localTime);
+            register.setDataTime(dataHora);
+        }
+        
+        // Editar tipo se fornecido
+        if (request.getType() != null) {
+            register.setType(RegisterType.valueOf(request.getType()));
+        }
 
         String newData = objectMapper.writeValueAsString(register);
 

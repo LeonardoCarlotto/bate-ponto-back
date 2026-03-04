@@ -13,4 +13,5 @@ public class UserResponse {
     String email;
     String type;
     String urlPhoto;
+    Boolean active;  // NOVO: status ativo/inativo
 }

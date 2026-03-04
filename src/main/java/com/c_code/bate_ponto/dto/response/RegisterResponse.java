@@ -23,6 +23,7 @@ public class RegisterResponse {
     private RegisterType type;
     private boolean edited;
     private String observation;
+    private String urlPhoto;
 
     public RegisterResponse(Long id,
             String userName,
@@ -30,7 +31,8 @@ public class RegisterResponse {
             LocalDateTime dataTime,
             RegisterType type,
             boolean edited,
-            String observation) {
+            String observation,
+            String urlPhoto) {
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -47,6 +49,7 @@ public class RegisterResponse {
         this.type = type;
         this.edited = edited;
         this.observation = observation;
+        this.urlPhoto = urlPhoto;
     }
 
     public RegisterResponse(Register register) {
@@ -64,6 +67,7 @@ public class RegisterResponse {
         this.type = register.getType();
         this.edited = register.isEdited();
         this.observation = register.getObservation();
+        this.urlPhoto = register.getUser().getUrlPhoto();
     }
 
     private String capitalize(String value) {

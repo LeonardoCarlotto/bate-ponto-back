@@ -7,8 +7,9 @@ import java.util.List;
 
 import com.c_code.bate_ponto.dto.request.RegisterEditRequest;
 import com.c_code.bate_ponto.dto.request.RegisterManualRequest;
-import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
+import com.c_code.bate_ponto.dto.request.RegisterRequest;
 import com.c_code.bate_ponto.dto.response.RegisterResponse;
+import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
 import com.c_code.bate_ponto.dto.response.WorkedHoursResponse;
 import com.c_code.bate_ponto.model.Register;
 import com.c_code.bate_ponto.model.User;
@@ -34,8 +35,8 @@ public class RegisterController {
     private final UserRepository userRepository;
 
     @PostMapping
-    public RegisterResponse register(@AuthenticationPrincipal UserDetailsImpl user) {
-        return registerService.registerPoint(user);
+    public RegisterResponse register(@RequestBody RegisterRequest request, @AuthenticationPrincipal UserDetailsImpl user) {
+        return registerService.registerPoint(request, user);
     }
 
     @GetMapping("/user")

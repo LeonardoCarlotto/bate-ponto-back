@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN url_photo VARCHAR(500);

@@ -6,13 +6,18 @@ import com.c_code.bate_ponto.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.c_code.bate_ponto.dto.request.ChangePasswordRequest;
+import com.c_code.bate_ponto.dto.request.UserPhotoRequest;
 import com.c_code.bate_ponto.dto.request.UserRequest;
+import com.c_code.bate_ponto.dto.request.UserUpdateRequest;
 import com.c_code.bate_ponto.dto.response.UserResponse;
 import com.c_code.bate_ponto.model.User;
 import com.c_code.bate_ponto.service.user.UserDetailsImpl;
@@ -39,7 +44,7 @@ public class UserController {
                 user.getUser().getName(),
                 user.getUser().getEmail(),
                 user.getUser().getType().name(),
-                null,
+                user.getUser().getUrlPhoto(),
                 user.getUser().isActive());
     }
 
@@ -53,7 +58,7 @@ public class UserController {
                 u.getName(),
                 u.getEmail(),
                 u.getType().name(),
-                null,
+                u.getUrlPhoto(),
                 u.isActive()))
             .toList();
     }
@@ -66,7 +71,8 @@ public class UserController {
             request.getEmail(),
             UserType.valueOf(request.getType().name()),
             request.getPassword(),
-            Role.valueOf(request.getRole().name())
+            Role.valueOf(request.getRole().name()),
+            request.getUrlPhoto()
         );
         
         return new UserResponse(
@@ -74,7 +80,42 @@ public class UserController {
             user.getName(),
             user.getEmail(),
             user.getType().name(),
-            null,
+            user.getUrlPhoto(),
+            user.isActive()
+        );
+    }
+
+    @PostMapping("/photo/change")
+    public void updatePhoto(@AuthenticationPrincipal UserDetailsImpl user, 
+                           @RequestBody UserPhotoRequest request) {
+        userService.updatePhoto(user.getId(), request.getUrlPhoto());
+    }
+
+    @PutMapping("/profile")
+    public UserResponse updateProfile(@AuthenticationPrincipal UserDetailsImpl userDetails,
+        @RequestBody UserUpdateRequest request) {
+        User user = userService.updateUser(userDetails.getId(), request);
+        return new UserResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getType().name(),
+            user.getUrlPhoto(),
+            user.isActive()
+        );
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse updateUser(@PathVariable Long id, 
+                                  @RequestBody UserUpdateRequest request) {
+        User user = userService.updateUser(id, request);
+        return new UserResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getType().name(),
+            user.getUrlPhoto(),
             user.isActive()
         );
     }

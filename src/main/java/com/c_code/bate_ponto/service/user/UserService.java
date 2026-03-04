@@ -1,6 +1,7 @@
 package com.c_code.bate_ponto.service.user;
 
 import com.c_code.bate_ponto.dto.request.UserRequest;
+import com.c_code.bate_ponto.dto.request.UserUpdateRequest;
 import com.c_code.bate_ponto.model.*;
 import com.c_code.bate_ponto.repository.*;
 
@@ -18,7 +19,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User register(String name, String email, UserType type, String password, Role role) {
+    public User register(String name, String email, UserType type, String password, Role role, String urlPhoto) {
 
         User user = new User();
         user.setName(name);
@@ -27,6 +28,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
         user.setActive(true);
+        user.setUrlPhoto(urlPhoto);
 
         return userRepository.save(user);
     }
@@ -56,5 +58,33 @@ public class UserService {
         
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    public void updatePhoto(Long userId, String urlPhoto) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        
+        user.setUrlPhoto(urlPhoto);
+        userRepository.save(user);
+    }
+
+    public User updateUser(Long userId, UserUpdateRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getUrlPhoto() != null) {
+            user.setUrlPhoto(request.getUrlPhoto());
+        }
+        if (request.getActive() != null) {
+            user.setActive(request.getActive());
+        }
+        
+        return userRepository.save(user);
     }
 }

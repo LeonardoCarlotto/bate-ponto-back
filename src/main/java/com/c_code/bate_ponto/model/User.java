@@ -28,4 +28,6 @@ public class User {
 
     private boolean active;
 
+    private String urlPhoto;
+
 }

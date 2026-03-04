@@ -29,6 +29,7 @@ public class AdminController {
                 request.email,
                 request.type,
                 request.password,
-                request.role);
+                request.role,
+                request.urlPhoto);
     }
 }

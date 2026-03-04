@@ -13,4 +13,5 @@ public class UserRequest {
     public UserType type;
     public Role role;
     public boolean active;
+    public String urlPhoto;
 }

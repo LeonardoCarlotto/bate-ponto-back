@@ -1,0 +1,3 @@
+ALTER TABLE register_audit 
+ALTER COLUMN old_data TYPE TEXT,
+ALTER COLUMN new_data TYPE TEXT;

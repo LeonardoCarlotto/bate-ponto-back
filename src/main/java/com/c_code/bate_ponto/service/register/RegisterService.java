@@ -8,8 +8,9 @@ import java.util.stream.Collectors;
 
 import com.c_code.bate_ponto.dto.request.RegisterEditRequest;
 import com.c_code.bate_ponto.dto.request.RegisterManualRequest;
-import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
+import com.c_code.bate_ponto.dto.request.RegisterRequest;
 import com.c_code.bate_ponto.dto.response.RegisterResponse;
+import com.c_code.bate_ponto.dto.request.WorkedHoursRequest;
 import com.c_code.bate_ponto.dto.response.WorkedHoursResponse;
 import com.c_code.bate_ponto.model.*;
 import com.c_code.bate_ponto.repository.*;
@@ -36,7 +37,7 @@ public class RegisterService {
     }
 
     @SuppressWarnings("null")
-    public RegisterResponse registerPoint(UserDetailsImpl userDetails) {
+    public RegisterResponse registerPoint(RegisterRequest request, UserDetailsImpl userDetails) {
 
         User user = userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new RuntimeException("user not found"));
@@ -45,7 +46,11 @@ public class RegisterService {
 
         Register register = new Register();
         register.setUser(user);
-        register.setDataTime(LocalDateTime.now());
+        
+        // Usa horário enviado pelo front, ou horário atual se não for enviado
+        LocalDateTime dataTime = request.getDataTime() != null ? request.getDataTime() : LocalDateTime.now();
+        register.setDataTime(dataTime);
+        
         register.setType(nextType);
 
         registerRepository.save(register);
@@ -55,7 +60,7 @@ public class RegisterService {
                 user.getName(),
                 user.getEmail(),
                 register.getDataTime(),
-                register.getType(), false, null);
+                register.getType(), false, null, user.getUrlPhoto());
     }
 
     private RegisterType calculateNextType(Long userId) {

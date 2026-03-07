@@ -247,4 +247,37 @@ public class RegisterService {
         return new RegisterResponse(register);
     }
 
+    public RegisterResponse findById(Long id, Long userId) {
+        Register register = registerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Registro não encontrado"));
+        
+        // Verificar se o usuário tem permissão para ver este registro
+        if (!register.getUser().getId().equals(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            if (!user.getRole().name().equals("ADMIN")) {
+                throw new RuntimeException("Sem permissão para ver este registro");
+            }
+        }
+        
+        return new RegisterResponse(register);
+    }
+
+    public java.util.Optional<RegisterResponse> findLastByUser(Long userId) {
+        List<Register> registers = registerRepository.findByUserIdOrderByDataTimeDesc(userId);
+        
+        if (registers.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        
+        return java.util.Optional.of(new RegisterResponse(registers.get(0)));
+    }
+
+    public void deleteRegister(Long id) {
+        Register register = registerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Registro não encontrado"));
+        
+        registerRepository.delete(register);
+    }
+
 }

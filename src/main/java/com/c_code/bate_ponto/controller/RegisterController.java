@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import com.c_code.bate_ponto.dto.request.RegisterEditRequest;
 import com.c_code.bate_ponto.dto.request.RegisterManualRequest;
@@ -24,6 +26,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @AllArgsConstructor
@@ -121,6 +125,28 @@ public class RegisterController {
                 request,
                 userDetails.getId());
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public RegisterResponse getRegister(@PathVariable Long id,
+                                        @AuthenticationPrincipal UserDetailsImpl user) {
+        return registerService.findById(id, user.getId());
+    }
+
+    @GetMapping("/last")
+    public ResponseEntity<RegisterResponse> getLastRegister(@AuthenticationPrincipal UserDetailsImpl user) {
+        return registerService.findLastByUser(user.getId())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteRegister(@PathVariable Long id) {
+        registerService.deleteRegister(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("mensagem", "Registro deletado com sucesso");
         return ResponseEntity.ok(response);
     }
 

@@ -4,6 +4,8 @@ import com.c_code.bate_ponto.dto.request.PackageRequest;
 import com.c_code.bate_ponto.dto.request.PackageUpdateRequest;
 import com.c_code.bate_ponto.dto.response.PackageResponse;
 import com.c_code.bate_ponto.model.Package;
+import com.c_code.bate_ponto.model.Product;
+import com.c_code.bate_ponto.model.ServiceItem;
 import com.c_code.bate_ponto.repository.PackageRepository;
 import com.c_code.bate_ponto.service.pkg.PackageService;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @RestController
@@ -108,13 +111,37 @@ public class PackageController {
     }
 
     private PackageResponse convertToResponse(Package pacote) {
-        List<PackageResponse.ProductBasicResponse> produtos = pacote.getProducts().stream()
-            .map(product -> new PackageResponse.ProductBasicResponse(
-                product.getId(),
-                product.getName(),
-                product.getPrice()
-            ))
-            .collect(Collectors.toList());
+        List<PackageResponse.ItemResponse> itens = new ArrayList<>();
+        
+        // Adicionar produtos como itens
+        if (pacote.getProducts() != null) {
+            for (Product product : pacote.getProducts()) {
+                itens.add(new PackageResponse.ItemResponse(
+                    String.valueOf(product.getId()),
+                    "produto",
+                    product.getId(),
+                    product.getName(),
+                    product.getPrice(),
+                    1, // quantidade padrão
+                    product.getPrice() // subtotal igual ao preço
+                ));
+            }
+        }
+        
+        // Adicionar serviços como itens
+        if (pacote.getServices() != null) {
+            for (ServiceItem service : pacote.getServices()) {
+                itens.add(new PackageResponse.ItemResponse(
+                    String.valueOf(service.getId()),
+                    "servico",
+                    service.getId(),
+                    service.getName(),
+                    service.getPrice(),
+                    1, // quantidade padrão
+                    service.getPrice() // subtotal igual ao preço
+                ));
+            }
+        }
 
         return new PackageResponse(
             pacote.getId(),
@@ -124,7 +151,7 @@ public class PackageController {
             pacote.getDurationDays(),
             pacote.getActive(),
             pacote.getDataCadastro(),
-            produtos
+            itens
         );
     }
 }

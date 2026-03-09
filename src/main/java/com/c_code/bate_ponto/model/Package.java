@@ -1,14 +1,16 @@
 package com.c_code.bate_ponto.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "packages")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Package {
 
@@ -41,12 +43,21 @@ public class Package {
     )
     private List<Product> products;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "package_services",
+        joinColumns = @JoinColumn(name = "package_id"),
+        inverseJoinColumns = @JoinColumn(name = "service_id")
+    )
+    private List<ServiceItem> services;
+
     public Package(String name, String description, Double price, Integer durationDays, List<Product> products) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.durationDays = durationDays;
         this.products = products != null ? products : new java.util.ArrayList<>();
+        this.services = new java.util.ArrayList<>();
         this.dataCadastro = LocalDateTime.now();
     }
 }

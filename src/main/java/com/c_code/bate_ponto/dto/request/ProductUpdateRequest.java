@@ -7,4 +7,5 @@ public class ProductUpdateRequest {
     private Double preco;
     private String descricao;
     private Integer estoque;
+    private Boolean status;
 }

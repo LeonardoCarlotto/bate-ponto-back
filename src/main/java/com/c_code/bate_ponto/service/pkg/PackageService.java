@@ -4,8 +4,10 @@ import com.c_code.bate_ponto.dto.request.PackageRequest;
 import com.c_code.bate_ponto.dto.request.PackageUpdateRequest;
 import com.c_code.bate_ponto.model.Package;
 import com.c_code.bate_ponto.model.Product;
+import com.c_code.bate_ponto.model.ServiceItem;
 import com.c_code.bate_ponto.repository.PackageRepository;
 import com.c_code.bate_ponto.repository.ProductRepository;
+import com.c_code.bate_ponto.repository.ServiceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +21,12 @@ public class PackageService {
 
     private final PackageRepository packageRepository;
     private final ProductRepository productRepository;
+    private final ServiceRepository serviceRepository;
 
-    public PackageService(PackageRepository packageRepository, ProductRepository productRepository) {
+    public PackageService(PackageRepository packageRepository, ProductRepository productRepository, ServiceRepository serviceRepository) {
         this.packageRepository = packageRepository;
         this.productRepository = productRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     @Transactional
@@ -48,21 +52,42 @@ public class PackageService {
             throw new RuntimeException("Nome de pacote já cadastrado");
         }
 
-        // Buscar produtos
+        // Buscar produtos (apenas itens do tipo "produto")
         List<Product> produtos = new ArrayList<>();
-        if (request.getProdutos() != null && !request.getProdutos().isEmpty()) {
-            List<Long> produtosIds = request.getProdutos().stream()
-                .map(PackageRequest.PackageProductRequest::getProdutoId)
+        List<ServiceItem> servicos = new ArrayList<>();
+        
+        if (request.getItens() != null && !request.getItens().isEmpty()) {
+            // Processar produtos
+            List<Long> produtosIds = request.getItens().stream()
+                .filter(item -> "produto".equals(item.getTipo()) && item.getItemId() != null)
+                .map(PackageRequest.PackageItemRequest::getItemId)
                 .collect(java.util.stream.Collectors.toList());
             
-            produtos = productRepository.findAllById(produtosIds);
-            if (produtos.size() != produtosIds.size()) {
-                throw new RuntimeException("Um ou mais produtos não foram encontrados");
+            if (!produtosIds.isEmpty()) {
+                produtos = productRepository.findAllById(produtosIds);
+                if (produtos.size() != produtosIds.size()) {
+                    throw new RuntimeException("Um ou mais produtos não foram encontrados");
+                }
+            }
+
+            // Processar serviços (criar ou buscar serviços existentes)
+            for (PackageRequest.PackageItemRequest item : request.getItens()) {
+                if ("servico".equals(item.getTipo()) && item.getNome() != null) {
+                    // Verificar se serviço já existe pelo nome
+                    ServiceItem servico = serviceRepository.findByName(item.getNome())
+                        .orElse(new ServiceItem(item.getNome(), item.getDescricao(), item.getPreco() != null ? item.getPreco() : 0.0));
+                    servicos.add(servico);
+                }
             }
         }
 
-        Package pacote = new Package(request.getNome(), request.getDescricao(), request.getPreco(), 
+        // Usar precoPersonalizado se fornecido, senão usa preco
+        Double precoFinal = request.getPrecoPersonalizado() != null ? 
+            request.getPrecoPersonalizado() : request.getPreco();
+
+        Package pacote = new Package(request.getNome(), request.getDescricao(), precoFinal, 
             30, produtos); // duração padrão de 30 dias
+        pacote.setServices(servicos);
         pacote.setActive(request.getAtivo() != null ? request.getAtivo() : true);
         
         return packageRepository.save(pacote);
@@ -102,13 +127,51 @@ public class PackageService {
             pacote.setActive(request.getAtivo());
         }
 
-        // Atualizar produtos se fornecido
-        if (request.getProdutosIds() != null) {
-            List<Product> produtos = productRepository.findAllById(request.getProdutosIds());
-            if (produtos.size() != request.getProdutosIds().size()) {
-                throw new RuntimeException("Um ou mais produtos não foram encontrados");
+        // Atualizar produtos e serviços se fornecidos
+        if (request.getItens() != null) {
+            List<Product> produtos = new ArrayList<>();
+            List<ServiceItem> servicos = new ArrayList<>();
+            
+            // Processar produtos
+            List<Long> produtosIds = request.getItens().stream()
+                .filter(item -> "produto".equals(item.getTipo()) && item.getItemId() != null)
+                .map(PackageRequest.PackageItemRequest::getItemId)
+                .collect(java.util.stream.Collectors.toList());
+            
+            if (!produtosIds.isEmpty()) {
+                produtos = productRepository.findAllById(produtosIds);
+                if (produtos.size() != produtosIds.size()) {
+                    throw new RuntimeException("Um ou mais produtos não foram encontrados");
+                }
             }
+
+            // Processar serviços (criar ou buscar/atualizar serviços existentes)
+            for (PackageRequest.PackageItemRequest item : request.getItens()) {
+                if ("servico".equals(item.getTipo()) && item.getNome() != null) {
+                    // Verificar se serviço já existe pelo nome
+                    ServiceItem servico = serviceRepository.findByName(item.getNome())
+                        .orElse(new ServiceItem(item.getNome(), item.getDescricao(), item.getPreco() != null ? item.getPreco() : 0.0));
+                    
+                    // Atualizar preço e descrição do serviço se fornecidos
+                    if (item.getPreco() != null) {
+                        servico.setPrice(item.getPreco());
+                    }
+                    if (item.getDescricao() != null) {
+                        servico.setDescription(item.getDescricao());
+                    }
+                    
+                    servicos.add(servico);
+                }
+            }
+            
+            // Salvar serviços novos/atualizados
+            if (!servicos.isEmpty()) {
+                servicos = serviceRepository.saveAll(servicos);
+            }
+            
+            // Atualizar produtos e serviços do pacote
             pacote.setProducts(produtos);
+            pacote.setServices(servicos);
         }
 
         return packageRepository.save(pacote);

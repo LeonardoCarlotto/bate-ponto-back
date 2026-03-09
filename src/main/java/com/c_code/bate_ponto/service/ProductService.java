@@ -68,7 +68,15 @@ public class ProductService {
         product.setPrice(request.getPreco());
         product.setStock(request.getEstoque());
         product.setCategory(category);
-        product.setActive(true);
+        
+        // Definir status: usa request.getStatus() ou inativa se estoque zerado, senão ativa
+        if (request.getStatus() != null) {
+            product.setActive(request.getStatus());
+        } else if (request.getEstoque() != null && request.getEstoque() == 0) {
+            product.setActive(false);
+        } else {
+            product.setActive(true);
+        }
 
         product = productRepository.save(product);
         return convertToProductResponse(product);
@@ -86,6 +94,14 @@ public class ProductService {
         }
         if (request.getEstoque() != null) {
             product.setStock(request.getEstoque());
+        }
+        if (request.getStatus() != null) {
+            product.setActive(request.getStatus());
+        }
+        
+        // Inativar produto automaticamente se estoque ficar zerado
+        if (product.getStock() != null && product.getStock() == 0) {
+            product.setActive(false);
         }
 
         product = productRepository.save(product);
@@ -108,6 +124,12 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
         product.setStock(request.getQuantidade());
+        
+        // Inativar produto automaticamente se estoque ficar zerado
+        if (product.getStock() != null && product.getStock() == 0) {
+            product.setActive(false);
+        }
+        
         product = productRepository.save(product);
 
         return new ProductResponse(

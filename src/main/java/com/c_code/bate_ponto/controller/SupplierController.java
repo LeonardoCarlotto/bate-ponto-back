@@ -55,11 +55,11 @@ public class SupplierController {
     @PostMapping
     public SupplierResponse createSupplier(@RequestBody SupplierRequest request) {
         Supplier supplier = supplierService.createSupplier(
-            request.getNome(),
+            request.getName(),
             request.getCnpj(),
             request.getEmail(),
-            request.getTelefone(),
-            request.getInscricaoEstadual()
+            request.getPhone(),
+            request.getStateRegistration()
         );
         return convertToResponse(supplier);
     }
@@ -69,7 +69,7 @@ public class SupplierController {
             @PathVariable Long id, 
             @RequestBody SupplierRequest request) {
         try {
-            Supplier supplier = supplierService.updateSupplier(id, request.getNome(), request.getTelefone());
+            Supplier supplier = supplierService.updateSupplier(id, request.getName(), request.getPhone());
             return ResponseEntity.ok(convertToResponse(supplier));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

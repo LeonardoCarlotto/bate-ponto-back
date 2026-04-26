@@ -5,7 +5,10 @@ import java.util.List;
 
 @Data
 public class OrderRequest {
-    private Long clientId;
-    private String description;
-    private List<OrderItemRequest> items;
+    private Long clienteId;
+    private String dataPedido;
+    private String status;
+    private String observacoes;
+    private List<OrderItemRequest> itens;
+    private Double total;
 }

@@ -4,7 +4,10 @@ import lombok.Data;
 
 @Data
 public class OrderItemRequest {
-    private Long productId;
-    private Integer quantity;
-    private Double unitPrice;
+    private Long id;
+    private String tipo;
+    private String nome;
+    private Integer quantidade;
+    private Double preco;
+    private Double subtotal;
 }

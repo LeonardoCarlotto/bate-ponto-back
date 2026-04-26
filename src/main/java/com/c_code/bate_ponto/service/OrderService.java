@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,11 +28,28 @@ public class OrderService {
     private final ProductRepository productRepository;
 
     public List<OrderResponse> getAllOrders(String status, String dataInicio, String dataFim) {
-        OrderStatus statusEnum = status != null ? OrderStatus.valueOf(status.toUpperCase()) : null;
-        LocalDateTime inicio = dataInicio != null ? LocalDateTime.parse(dataInicio) : null;
-        LocalDateTime fim = dataFim != null ? LocalDateTime.parse(dataFim) : null;
-
-        List<Order> orders = orderRepository.findByFilters(statusEnum, inicio, fim);
+        List<Order> orders = orderRepository.findAll();
+        
+        if (status != null && !status.isEmpty()) {
+            OrderStatus statusEnum = OrderStatus.valueOf(status.toUpperCase());
+            orders = orders.stream()
+                    .filter(o -> o.getStatus() == statusEnum)
+                    .collect(Collectors.toList());
+        }
+        
+        if (dataInicio != null && !dataInicio.isEmpty()) {
+            LocalDateTime inicio = LocalDateTime.parse(dataInicio);
+            orders = orders.stream()
+                    .filter(o -> o.getDate().isAfter(inicio.minusSeconds(1)))
+                    .collect(Collectors.toList());
+        }
+        
+        if (dataFim != null && !dataFim.isEmpty()) {
+            LocalDateTime fim = LocalDateTime.parse(dataFim);
+            orders = orders.stream()
+                    .filter(o -> o.getDate().isBefore(fim.plusSeconds(1)))
+                    .collect(Collectors.toList());
+        }
 
         return orders.stream()
                 .map(this::convertToOrderResponse)
@@ -39,11 +57,38 @@ public class OrderService {
     }
 
     public List<OrderResponse> getOrdersByFilters(Long clienteId, String status, String dataInicio, String dataFim) {
-        OrderStatus statusEnum = status != null ? OrderStatus.valueOf(status.toUpperCase()) : null;
-        LocalDateTime inicio = dataInicio != null ? LocalDateTime.parse(dataInicio) : null;
-        LocalDateTime fim = dataFim != null ? LocalDateTime.parse(dataFim) : null;
-
-        List<Order> orders = orderRepository.findByFiltersWithClient(clienteId, statusEnum, inicio, fim);
+        List<Order> orders = orderRepository.findAll();
+        
+        // Filtrar por cliente
+        if (clienteId != null) {
+            orders = orders.stream()
+                    .filter(o -> o.getClient().getId().equals(clienteId))
+                    .collect(Collectors.toList());
+        }
+        
+        // Filtrar por status
+        if (status != null && !status.isEmpty()) {
+            OrderStatus statusEnum = OrderStatus.valueOf(status.toUpperCase());
+            orders = orders.stream()
+                    .filter(o -> o.getStatus() == statusEnum)
+                    .collect(Collectors.toList());
+        }
+        
+        // Filtrar por data inicial
+        if (dataInicio != null && !dataInicio.isEmpty()) {
+            LocalDateTime inicio = LocalDateTime.parse(dataInicio);
+            orders = orders.stream()
+                    .filter(o -> o.getDate().isAfter(inicio.minusSeconds(1)))
+                    .collect(Collectors.toList());
+        }
+        
+        // Filtrar por data final
+        if (dataFim != null && !dataFim.isEmpty()) {
+            LocalDateTime fim = LocalDateTime.parse(dataFim);
+            orders = orders.stream()
+                    .filter(o -> o.getDate().isBefore(fim.plusSeconds(1)))
+                    .collect(Collectors.toList());
+        }
 
         return orders.stream()
                 .map(this::convertToOrderResponse)
@@ -57,26 +102,27 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(OrderRequest request) {
-        Client client = clientRepository.findById(request.getClientId())
+        Client client = clientRepository.findById(request.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
         Order order = new Order();
         order.setClient(client);
-        order.setDescription(request.getDescription());
-        order.setStatus(OrderStatus.PENDENTE);
-        order.setDate(LocalDateTime.now());
-        order.setValue(0.0);
+        order.setDescription(request.getObservacoes());
+        order.setStatus(OrderStatus.valueOf(request.getStatus()));
+        order.setDate(LocalDateTime.parse(request.getDataPedido()));
+        order.setValue(request.getTotal());
+        order.setItems(new ArrayList<>());
 
         order = orderRepository.save(order);
 
         double totalValue = 0.0;
-        for (OrderItemRequest itemRequest : request.getItems()) {
-            Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + itemRequest.getProductId()));
+        for (OrderItemRequest itemRequest : request.getItens()) {
+            Product product = productRepository.findById(itemRequest.getId())
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + itemRequest.getId()));
 
-            OrderItem item = new OrderItem(order, product, itemRequest.getQuantity(), itemRequest.getUnitPrice());
+            OrderItem item = new OrderItem(order, product, itemRequest.getQuantidade(), itemRequest.getPreco());
             orderItemRepository.save(item);
-            totalValue += item.getSubtotal();
+            totalValue += itemRequest.getSubtotal();
         }
 
         order.setValue(totalValue);
@@ -147,10 +193,10 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        Product product = productRepository.findById(request.getProductId())
+        Product product = productRepository.findById(request.getId())
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        OrderItem item = new OrderItem(order, product, request.getQuantity(), request.getUnitPrice());
+        OrderItem item = new OrderItem(order, product, request.getQuantidade(), request.getPreco());
         item = orderItemRepository.save(item);
 
         // Atualizar valor total do pedido

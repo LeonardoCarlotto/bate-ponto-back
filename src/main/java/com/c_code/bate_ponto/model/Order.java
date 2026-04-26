@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "orders")
@@ -42,5 +43,6 @@ public class Order {
         this.status = status;
         this.value = value;
         this.date = date;
+        this.items = new ArrayList<>();
     }
 }

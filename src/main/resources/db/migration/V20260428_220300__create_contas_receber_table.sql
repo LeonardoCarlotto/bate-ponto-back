@@ -1,0 +1,16 @@
+CREATE TABLE contas_receber (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  clienteId INT NOT NULL,
+  clienteNome VARCHAR(255),
+  valor DECIMAL(10,2) NOT NULL,
+  formaPagamento VARCHAR(50),
+  descricao TEXT,
+  dataPagamento DATE NULL,
+  pedidoId INT NULL,
+  tipoPagamento VARCHAR(50),
+  status VARCHAR(20) DEFAULT 'PENDENTE',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (clienteId) REFERENCES clients(id),
+  FOREIGN KEY (pedidoId) REFERENCES orders(id)
+);

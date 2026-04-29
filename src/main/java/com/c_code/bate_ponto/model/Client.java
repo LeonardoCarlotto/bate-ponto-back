@@ -32,6 +32,9 @@ public class Client {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Column(name = "data_aniversario")
+    private String dataAniversario;
+
     @Column(name = "data_cadastro", nullable = false)
     private LocalDateTime dataCadastro;
 

@@ -26,15 +26,37 @@ public class SupplierService {
     }
 
     @Transactional
-    public Supplier updateSupplier(Long id, String nome, String telefone) {
+    public Supplier updateSupplier(Long id, String nome, String cnpj, String email, String telefone, String inscricaoEstadual) {
         Supplier supplier = supplierRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado"));
         
+        // Atualiza nome se fornecido
         if (nome != null && !nome.trim().isEmpty()) {
             supplier.setName(nome);
         }
+        
+        // Atualiza CNPJ se fornecido e for diferente
+        if (cnpj != null && !cnpj.trim().isEmpty() && !cnpj.equals(supplier.getCnpj())) {
+            // Verifica se CNPJ já existe para outro fornecedor
+            if (supplierRepository.existsByCnpj(cnpj)) {
+                throw new RuntimeException("CNPJ já cadastrado para outro fornecedor");
+            }
+            supplier.setCnpj(cnpj);
+        }
+        
+        // Atualiza email se fornecido
+        if (email != null && !email.trim().isEmpty()) {
+            supplier.setEmail(email);
+        }
+        
+        // Atualiza telefone se fornecido
         if (telefone != null && !telefone.trim().isEmpty()) {
             supplier.setPhone(telefone);
+        }
+        
+        // Atualiza inscrição estadual se fornecida
+        if (inscricaoEstadual != null && !inscricaoEstadual.trim().isEmpty()) {
+            supplier.setStateRegistration(inscricaoEstadual);
         }
         
         return supplierRepository.save(supplier);

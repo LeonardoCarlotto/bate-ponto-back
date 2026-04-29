@@ -7,4 +7,5 @@ public class ClientUpdateRequest {
     private String nome;
     private String email;
     private Boolean ativo;
+    private String dataAniversario;
 }

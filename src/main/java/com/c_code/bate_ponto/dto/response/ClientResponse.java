@@ -11,17 +11,19 @@ public class ClientResponse {
     private String email;
     private String telefone;
     private String dataAbertura;
+    private String dataAniversario;
     private Boolean ativo;
     private LocalDateTime dataCadastro;
 
     public ClientResponse(Long id, String nome, String cpfCnpj, String email, String telefone, 
-                        String dataAbertura, Boolean ativo, LocalDateTime dataCadastro) {
+                        String dataAbertura, String dataAniversario, Boolean ativo, LocalDateTime dataCadastro) {
         this.id = id;
         this.nome = nome;
         this.cpfCnpj = cpfCnpj;
         this.email = email;
         this.telefone = telefone;
         this.dataAbertura = dataAbertura;
+        this.dataAniversario = dataAniversario;
         this.ativo = ativo;
         this.dataCadastro = dataCadastro;
     }

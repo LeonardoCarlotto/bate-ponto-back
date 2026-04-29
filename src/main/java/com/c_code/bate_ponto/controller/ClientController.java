@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/clientes")
@@ -36,7 +38,8 @@ public class ClientController {
             request.getCpfCnpj(),
             request.getEmail(),
             request.getTelefone(),
-            request.getDataAbertura()
+            request.getDataAbertura(),
+            request.getDataAniversario()
         );
         
         return new ClientResponse(
@@ -46,6 +49,7 @@ public class ClientController {
             client.getEmail(),
             client.getTelefone(),
             client.getDataAbertura(),
+            client.getDataAniversario(),
             client.getActive(),
             client.getDataCadastro()
         );
@@ -72,6 +76,7 @@ public class ClientController {
                 client.getEmail(),
                 client.getTelefone(),
                 client.getDataAbertura(),
+                client.getDataAniversario(),
                 client.getActive(),
                 client.getDataCadastro()
             ))
@@ -89,6 +94,7 @@ public class ClientController {
                 client.getEmail(),
                 client.getTelefone(),
                 client.getDataAbertura(),
+                client.getDataAniversario(),
                 client.getActive(),
                 client.getDataCadastro()
             )))
@@ -110,6 +116,7 @@ public class ClientController {
                 client.getEmail(),
                 client.getTelefone(),
                 client.getDataAbertura(),
+                client.getDataAniversario(),
                 client.getActive(),
                 client.getDataCadastro()
             ));
@@ -145,6 +152,7 @@ public class ClientController {
                 client.getEmail(),
                 client.getTelefone(),
                 client.getDataAbertura(),
+                client.getDataAniversario(),
                 client.getActive(),
                 client.getDataCadastro()
             ));
@@ -217,6 +225,7 @@ public class ClientController {
                 client.getEmail(),
                 client.getTelefone(),
                 client.getDataAbertura(),
+                client.getDataAniversario(),
                 client.getActive(),
                 client.getDataCadastro()
             )))
@@ -235,9 +244,50 @@ public class ClientController {
                 client.getEmail(),
                 client.getTelefone(),
                 client.getDataAbertura(),
+                client.getDataAniversario(),
                 client.getActive(),
                 client.getDataCadastro()
             )))
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/aniversariantes-hoje")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Map<String, Object>> getBirthdayClientsToday() {
+        LocalDate today = LocalDate.now();
+        String todayMonth = String.format("%02d", today.getMonthValue());
+        String todayDay = String.format("%02d", today.getDayOfMonth());
+        
+        List<Client> clients = clientRepository.findAll();
+        
+        return clients.stream()
+            .filter(client -> {
+                String dataAniversario = client.getDataAniversario();
+                if (dataAniversario == null || dataAniversario.isEmpty()) {
+                    return false;
+                }
+                
+                try {
+                    String[] parts = dataAniversario.split("-");
+                    if (parts.length >= 2) {
+                        String month = parts[1].length() == 1 ? "0" + parts[1] : parts[1];
+                        String day = parts[2].length() == 1 ? "0" + parts[2] : parts[2];
+                        return month.equals(todayMonth) && day.equals(todayDay);
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+                return false;
+            })
+            .map(client -> {
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", client.getId());
+                response.put("nome", client.getName());
+                response.put("email", client.getEmail());
+                response.put("telefone", client.getTelefone());
+                response.put("dataAniversario", client.getDataAniversario());
+                return response;
+            })
+            .collect(Collectors.toList());
     }
 }

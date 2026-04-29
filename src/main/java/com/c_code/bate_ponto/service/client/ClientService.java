@@ -18,7 +18,7 @@ public class ClientService {
     }
 
     @Transactional
-    public Client createClient(String nome, String cpfCnpj, String email, String telefone, String dataAbertura) {
+    public Client createClient(String nome, String cpfCnpj, String email, String telefone, String dataAbertura, String dataAniversario) {
         // Verificar se CPF/CNPJ já existe
         if (clientRepository.existsByCpfCnpj(cpfCnpj)) {
             throw new RuntimeException("CPF/CNPJ já cadastrado");
@@ -30,6 +30,7 @@ public class ClientService {
         }
 
         Client client = new Client(nome, cpfCnpj, email, telefone, dataAbertura);
+        client.setDataAniversario(dataAniversario);
         return clientRepository.save(client);
     }
 
@@ -55,6 +56,11 @@ public class ClientService {
         // Atualizar status ativo se fornecido
         if (request.getAtivo() != null) {
             client.setActive(request.getAtivo());
+        }
+
+        // Atualizar data de aniversário se fornecida
+        if (request.getDataAniversario() != null) {
+            client.setDataAniversario(request.getDataAniversario());
         }
 
         return clientRepository.save(client);

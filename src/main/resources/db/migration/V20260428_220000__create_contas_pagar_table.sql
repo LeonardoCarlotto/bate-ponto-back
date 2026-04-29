@@ -1,0 +1,15 @@
+CREATE TABLE contas_pagar (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  fornecedorId INT NOT NULL,
+  fornecedorNome VARCHAR(255),
+  dataVencimento DATE NOT NULL,
+  dataPagamento DATE NULL,
+  status VARCHAR(20) DEFAULT 'PENDENTE',
+  descricao TEXT NOT NULL,
+  valor DECIMAL(10,2) NOT NULL,
+  formaPagamento VARCHAR(50),
+  parcelas INT DEFAULT 1,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (fornecedorId) REFERENCES suppliers(id)
+);

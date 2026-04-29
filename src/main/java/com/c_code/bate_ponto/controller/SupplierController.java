@@ -69,7 +69,14 @@ public class SupplierController {
             @PathVariable Long id, 
             @RequestBody SupplierRequest request) {
         try {
-            Supplier supplier = supplierService.updateSupplier(id, request.getName(), request.getPhone());
+            Supplier supplier = supplierService.updateSupplier(
+                id, 
+                request.getName(), 
+                request.getCnpj(), 
+                request.getEmail(), 
+                request.getPhone(), 
+                request.getStateRegistration()
+            );
             return ResponseEntity.ok(convertToResponse(supplier));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

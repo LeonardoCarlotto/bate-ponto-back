@@ -34,6 +34,11 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    @Column(name = "forma_pagamento")
+    private String formaPagamento;
+
+    private Integer parcelas;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 

@@ -9,4 +9,5 @@ public class ClientRequest {
     private String email;
     private String telefone;
     private String dataAbertura;
+    private String dataAniversario;
 }

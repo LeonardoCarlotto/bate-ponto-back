@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,10 +38,10 @@ public class Supplier {
     private LocalDateTime dataCadastro;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SupplierContact> contacts;
+    private List<SupplierContact> contacts = new ArrayList<>();
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SupplierAddress> addresses;
+    private List<SupplierAddress> addresses = new ArrayList<>();
 
     // Getters e Setters manuais
     public Long getId() { return id; }

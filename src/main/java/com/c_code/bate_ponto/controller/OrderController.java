@@ -18,6 +18,7 @@ import java.util.Map;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/pedidos")
+@PreAuthorize("hasRole('ADMIN')")
 public class OrderController {
 
     private final OrderService orderService;
@@ -29,11 +30,6 @@ public class OrderController {
             @RequestParam(required = false) String dataFim,
             @RequestParam(required = false) Long usuarioId,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        
-        // Se não for admin, só pode ver seus próprios pedidos
-        if (!user.getUser().getRole().name().equals("ADMIN")) {
-            usuarioId = user.getId();
-        }
         
         if (usuarioId != null) {
             return orderService.getOrdersByFilters(usuarioId, status, dataInicio, dataFim);
@@ -62,7 +58,6 @@ public class OrderController {
     }
 
     @DeleteMapping("/{pedidoId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteOrder(@PathVariable Long pedidoId) {
         Map<String, String> response = orderService.deleteOrder(pedidoId);
         return ResponseEntity.ok(response);

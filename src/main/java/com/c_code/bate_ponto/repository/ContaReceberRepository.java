@@ -10,8 +10,12 @@ import java.util.List;
 public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long> {
     
     List<ContaReceber> findByClienteId(Long clienteId);
+
+    List<ContaReceber> findByClienteIdAndStatus(Long clienteId, String status);
     
     List<ContaReceber> findByPedidoId(Long pedidoId);
+
+    List<ContaReceber> findByPedidoIdAndStatus(Long pedidoId, String status);
     
     List<ContaReceber> findByStatus(String status);
 }

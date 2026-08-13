@@ -19,8 +19,18 @@ public class OrderItem {
     private Order order;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id")
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "package_id")
+    private Package packageItem;
+
+    @Column(nullable = false)
+    private String itemType;
+
+    @Column(nullable = false)
+    private String itemName;
 
     @Column(nullable = false)
     private Integer quantity;
@@ -34,6 +44,18 @@ public class OrderItem {
     public OrderItem(Order order, Product product, Integer quantity, Double unitPrice) {
         this.order = order;
         this.product = product;
+        this.itemType = "produto";
+        this.itemName = product.getName();
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.subtotal = quantity * unitPrice;
+    }
+
+    public OrderItem(Order order, Package packageItem, Integer quantity, Double unitPrice) {
+        this.order = order;
+        this.packageItem = packageItem;
+        this.itemType = "pacote";
+        this.itemName = packageItem.getName();
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.subtotal = quantity * unitPrice;

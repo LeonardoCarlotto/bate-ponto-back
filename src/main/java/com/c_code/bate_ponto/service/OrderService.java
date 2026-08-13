@@ -26,6 +26,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ClientRepository clientRepository;
     private final ProductRepository productRepository;
+    private final PackageRepository packageRepository;
 
     public List<OrderResponse> getAllOrders(String status, String dataInicio, String dataFim) {
         List<Order> orders = orderRepository.findAll();
@@ -102,30 +103,12 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(OrderRequest request) {
-        Client client = clientRepository.findById(request.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-
         Order order = new Order();
-        order.setClient(client);
-        order.setDescription(request.getObservacoes());
-        order.setStatus(OrderStatus.valueOf(request.getStatus()));
-        order.setDate(LocalDateTime.parse(request.getDataPedido()));
-        order.setValue(request.getTotal());
         order.setItems(new ArrayList<>());
+        applyOrderRequest(order, request);
 
         order = orderRepository.save(order);
-
-        double totalValue = 0.0;
-        for (OrderItemRequest itemRequest : request.getItens()) {
-            Product product = productRepository.findById(itemRequest.getId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + itemRequest.getId()));
-
-            OrderItem item = new OrderItem(order, product, itemRequest.getQuantidade(), itemRequest.getPreco());
-            orderItemRepository.save(item);
-            totalValue += itemRequest.getSubtotal();
-        }
-
-        order.setValue(totalValue);
+        replaceOrderItems(order, request.getItens());
         order = orderRepository.save(order);
 
         return convertToOrderResponse(order);
@@ -135,12 +118,35 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        if (request.getDescription() != null) {
-            order.setDescription(request.getDescription());
+        if (request.getClienteId() != null) {
+            Client client = clientRepository.findById(request.getClienteId())
+                    .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+            order.setClient(client);
+        }
+
+        if (request.getDescricaoFinal() != null) {
+            order.setDescription(request.getDescricaoFinal());
+        }
+
+        if (request.getDataPedido() != null && !request.getDataPedido().trim().isEmpty()) {
+            order.setDate(parseDate(request.getDataPedido()));
         }
 
         if (request.getStatus() != null) {
             order.setStatus(OrderStatus.valueOf(request.getStatus().toUpperCase()));
+        }
+
+        if (request.getFormaPagamento() != null) {
+            order.setFormaPagamento(trim(request.getFormaPagamento()));
+        }
+
+        if (request.getParcelas() != null) {
+            validateParcelas(request.getParcelas());
+            order.setParcelas(request.getParcelas());
+        }
+
+        if (request.getItens() != null) {
+            replaceOrderItems(order, request.getItens());
         }
 
         order = orderRepository.save(order);
@@ -151,10 +157,11 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        orderRepository.delete(order);
+        order.setStatus(OrderStatus.CANCELADO);
+        orderRepository.save(order);
         
         Map<String, String> response = new HashMap<>();
-        response.put("mensagem", "Pedido deletado com sucesso");
+        response.put("mensagem", "Pedido cancelado com sucesso");
         return response;
     }
 
@@ -165,20 +172,7 @@ public class OrderService {
         order.setStatus(OrderStatus.valueOf(request.getStatus().toUpperCase()));
         order = orderRepository.save(order);
 
-        OrderResponse response = new OrderResponse(
-                order.getId(),
-                order.getClient().getId(),
-                order.getClient().getName(),
-                order.getDate(),
-                order.getStatus().name(),
-                order.getValue(),
-                order.getDescription(),
-                order.getItems().stream()
-                        .map(this::convertToOrderItemResponse)
-                        .collect(Collectors.toList())
-        );
-        
-        return response;
+        return convertToOrderResponse(order);
     }
 
     public List<OrderItemResponse> getOrderItems(Long orderId) {
@@ -193,17 +187,11 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        Product product = productRepository.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
-        OrderItem item = new OrderItem(order, product, request.getQuantidade(), request.getPreco());
+        OrderItem item = createOrderItem(order, request);
         item = orderItemRepository.save(item);
+        order.getItems().add(item);
 
-        // Atualizar valor total do pedido
-        double totalValue = order.getItems().stream()
-                .mapToDouble(OrderItem::getSubtotal)
-                .sum();
-        order.setValue(totalValue);
+        recalculateOrderValue(order);
         orderRepository.save(order);
 
         return convertToOrderItemResponse(item);
@@ -219,12 +207,9 @@ public class OrderService {
         }
 
         orderItemRepository.delete(item);
+        order.getItems().removeIf(existingItem -> existingItem.getId().equals(itemId));
 
-        // Atualizar valor total do pedido
-        double totalValue = order.getItems().stream()
-                .mapToDouble(OrderItem::getSubtotal)
-                .sum();
-        order.setValue(totalValue);
+        recalculateOrderValue(order);
         orderRepository.save(order);
 
         Map<String, String> response = new HashMap<>();
@@ -245,18 +230,144 @@ public class OrderService {
                 order.getStatus().name(),
                 order.getValue(),
                 order.getDescription(),
+                order.getFormaPagamento(),
+                order.getParcelas(),
                 itens
         );
     }
 
     private OrderItemResponse convertToOrderItemResponse(OrderItem item) {
+        Long produtoId = item.getProduct() != null ? item.getProduct().getId() : null;
+        String produtoNome = item.getProduct() != null ? item.getProduct().getName() : null;
+        Long pacoteId = item.getPackageItem() != null ? item.getPackageItem().getId() : null;
+        String pacoteNome = item.getPackageItem() != null ? item.getPackageItem().getName() : null;
+        String tipo = item.getItemType() != null ? item.getItemType() : (pacoteId != null ? "pacote" : "produto");
+        String nome = item.getItemName() != null ? item.getItemName() : (pacoteNome != null ? pacoteNome : produtoNome);
+
         return new OrderItemResponse(
                 item.getId(),
-                item.getProduct().getId(),
-                item.getProduct().getName(),
+                produtoId,
+                produtoNome,
+                pacoteId,
+                pacoteNome,
+                tipo,
+                nome,
                 item.getQuantity(),
                 item.getUnitPrice(),
                 item.getSubtotal()
         );
+    }
+
+    private void applyOrderRequest(Order order, OrderRequest request) {
+        validateOrderRequest(request);
+
+        Client client = clientRepository.findById(request.getClienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        order.setClient(client);
+        order.setDescription(normalizeDescription(request.getDescricaoFinal()));
+        order.setStatus(parseStatus(request.getStatus()));
+        order.setDate(parseDate(request.getDataPedido()));
+        order.setFormaPagamento(trim(request.getFormaPagamento()));
+        validateParcelas(request.getParcelas());
+        order.setParcelas(request.getParcelas());
+        order.setValue(0.0);
+    }
+
+    private void validateOrderRequest(OrderRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Dados do pedido são obrigatórios");
+        }
+        if (request.getClienteId() == null) {
+            throw new RuntimeException("Cliente é obrigatório");
+        }
+        if (request.getItens() == null || request.getItens().isEmpty()) {
+            throw new RuntimeException("Pedido deve ter pelo menos um item");
+        }
+        if (request.getFormaPagamento() == null || request.getFormaPagamento().trim().isEmpty()) {
+            throw new RuntimeException("Forma de pagamento é obrigatória");
+        }
+    }
+
+    private void replaceOrderItems(Order order, List<OrderItemRequest> itemRequests) {
+        if (itemRequests == null || itemRequests.isEmpty()) {
+            throw new RuntimeException("Pedido deve ter pelo menos um item");
+        }
+
+        order.getItems().clear();
+        for (OrderItemRequest itemRequest : itemRequests) {
+            order.getItems().add(createOrderItem(order, itemRequest));
+        }
+        recalculateOrderValue(order);
+    }
+
+    private OrderItem createOrderItem(Order order, OrderItemRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Item do pedido é obrigatório");
+        }
+        if (request.getQuantidade() == null || request.getQuantidade() <= 0) {
+            throw new RuntimeException("Quantidade do item deve ser maior que zero");
+        }
+
+        Double preco = request.getPrecoFinal();
+        if (preco == null || preco < 0) {
+            throw new RuntimeException("Preço do item deve ser maior ou igual a zero");
+        }
+
+        String tipo = request.getTipo() != null ? request.getTipo().toLowerCase() : "produto";
+        Long referenciaId = request.getReferenciaId();
+        if (referenciaId == null) {
+            throw new RuntimeException("Referência do item é obrigatória");
+        }
+
+        if ("pacote".equals(tipo)) {
+            com.c_code.bate_ponto.model.Package pacote = packageRepository.findById(referenciaId)
+                    .orElseThrow(() -> new RuntimeException("Pacote não encontrado: " + referenciaId));
+            return new OrderItem(order, pacote, request.getQuantidade(), preco);
+        }
+
+        Product product = productRepository.findById(referenciaId)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + referenciaId));
+        return new OrderItem(order, product, request.getQuantidade(), preco);
+    }
+
+    private void recalculateOrderValue(Order order) {
+        double totalValue = order.getItems().stream()
+                .mapToDouble(OrderItem::getSubtotal)
+                .sum();
+        order.setValue(totalValue);
+    }
+
+    private LocalDateTime parseDate(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return LocalDateTime.now();
+        }
+        String normalized = value.trim();
+        if (normalized.length() == 10) {
+            normalized = normalized + "T00:00:00";
+        }
+        return LocalDateTime.parse(normalized);
+    }
+
+    private OrderStatus parseStatus(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return OrderStatus.PREPARACAO;
+        }
+        return OrderStatus.valueOf(value.toUpperCase());
+    }
+
+    private void validateParcelas(Integer parcelas) {
+        if (parcelas == null || parcelas < 1 || parcelas > 12) {
+            throw new RuntimeException("Parcelas deve estar entre 1 e 12");
+        }
+    }
+
+    private String trim(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    private String normalizeDescription(String value) {
+        String trimmed = trim(value);
+        return trimmed == null || trimmed.isEmpty() ? "Pedido sem descrição" : trimmed;
     }
 }

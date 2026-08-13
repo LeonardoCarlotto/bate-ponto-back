@@ -30,6 +30,7 @@ public class User {
 
     private boolean active;
 
+    @Column(name = "url_photo", columnDefinition = "TEXT")
     private String urlPhoto;
 
     // Getters e Setters manuais

@@ -42,8 +42,19 @@ DTOs: contrato de entrada e saída da API
 Model: entidades JPA
 
 ▶️ Como rodar o projeto
-mvn clean install
-mvn spring-boot:run
+
+Para desenvolvimento local sem Postgres/MySQL, use o profile `local`, que sobe H2 persistente em `./data/bate-ponto` e cria um usuario admin inicial:
+
+```bash
+./mvnw -o spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+Credenciais locais:
+
+```text
+E-mail: admin@bateponto.com
+Senha: admin123
+```
 
 
 A aplicação sobe em:

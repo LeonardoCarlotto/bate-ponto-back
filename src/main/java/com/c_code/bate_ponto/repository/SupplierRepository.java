@@ -15,6 +15,8 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     Optional<Supplier> findByCnpj(String cnpj);
     
     boolean existsByCnpj(String cnpj);
+
+    boolean existsByCnpjAndIdNot(String cnpj, Long id);
     
     @Query("SELECT s FROM Supplier s WHERE " +
            "(:nome IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :nome, '%')))")
